@@ -1,0 +1,74 @@
+<!-- Floating Chatbot -->
+<div id="chatbot" style="position: fixed; bottom: 20px; right: 20px; z-index: 999;">
+  <button id="chatToggle" class="btn btn-primary rounded-circle" style="width: 60px; height: 60px;">
+    💬
+  </button>
+
+  <div id="chatBox" class="card shadow border-0" style="width: 480px; display: none; margin-top: 10px;">
+    <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white py-2 px-3">
+      <span><strong>TashaBot</strong></span>
+      <div>
+        <button id="minimizeBtn" class="btn btn-sm btn-light me-1" title="Minimize">—</button>
+        <button id="closeBtn" class="btn btn-sm btn-light" title="Close">✖</button>
+      </div>
+    </div>
+    <div class="card-body p-2">
+      <div id="chatMessages" style="height: 400px; overflow-y: auto; font-size: 15px;"></div>
+      <input type="text" id="chatInput" class="form-control mt-2" placeholder="Ask something..." style="font-size: 14px;" />
+    </div>
+  </div>
+</div>
+
+<script>
+  const toggleBtn = document.getElementById("chatToggle");
+  const chatBox = document.getElementById("chatBox");
+  const chatInput = document.getElementById("chatInput");
+  const chatMessages = document.getElementById("chatMessages");
+  const minimizeBtn = document.getElementById("minimizeBtn");
+  const closeBtn = document.getElementById("closeBtn");
+
+  toggleBtn.addEventListener("click", () => {
+    chatBox.style.display = "block";
+  });
+
+  minimizeBtn.addEventListener("click", () => {
+    chatBox.style.display = "none";
+  });
+
+  closeBtn.addEventListener("click", () => {
+    chatBox.style.display = "none";
+  });
+
+  chatInput.addEventListener("keypress", async function (e) {
+    if (e.key === "Enter") {
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+
+      const userMsg = document.createElement("div");
+      userMsg.innerHTML = `<strong>You:</strong> ${msg}`;
+      chatMessages.appendChild(userMsg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      chatInput.value = "";
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg })
+        });
+
+        const data = await res.json();
+        const reply = data.reply || "❌ No response from TashaBot.";
+
+        const botMsg = document.createElement("div");
+        botMsg.innerHTML = `<strong>TashaBot:</strong> ${reply}`;
+        chatMessages.appendChild(botMsg);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      } catch (err) {
+        const errorMsg = document.createElement("div");
+        errorMsg.innerHTML = `<strong>TashaBot:</strong> ❌ Failed to connect to chatbot.`;
+        chatMessages.appendChild(errorMsg);
+      }
+    }
+  });
+</script>
